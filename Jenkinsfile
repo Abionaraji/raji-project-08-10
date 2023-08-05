@@ -1,121 +1,103 @@
-pipeline {
-    
-	agent any
-/*	
-	tools {
-        maven "maven3"
+def COLOR_MAP = [
+    'SUCCESS':'good',
+    'FAILURE':'danger'
+]
+
+pipeline{
+    agent any
+    tools{
+        jdk 'JDK'
+        maven 'Maven'
     }
-*/	
-    environment {
-        NEXUS_VERSION = "nexus3"
-        NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "172.31.40.209:8081"
-        NEXUS_REPOSITORY = "vprofile-release"
-	NEXUS_REPO_ID    = "vprofile-release"
-        NEXUS_CREDENTIAL_ID = "nexuslogin"
-        ARTVERSION = "${env.BUILD_ID}"
-    }
-	
     stages{
-        
-        stage('BUILD'){
-            steps {
-                sh 'mvn clean install -DskipTests'
-            }
-            post {
-                success {
-                    echo 'Now Archiving...'
-                    archiveArtifacts artifacts: '**/target/*.war'
-                }
+        stage('Git Checkout'){
+            steps{
+                git branch: 'master', url: 'https://github.com/Abionaraji/project-0805.git'
             }
         }
-
-	stage('UNIT TEST'){
-            steps {
+        stage('Build Maven'){
+            steps{
+                sh 'mvn clean install'
+            }
+        }
+        stage('Test Unit'){
+            steps{
                 sh 'mvn test'
             }
-        }
-
-	stage('INTEGRATION TEST'){
-            steps {
-                sh 'mvn verify -DskipUnitTests'
+            post {
+                success {
+                    slackSend channel: '#ci-work',
+                    color: 'good',
+                    message: "UNIT TEST IS SUCCESS"
+                }
+                failure {
+                    slackSend channel: '#ci-work',
+                    color: 'danger',
+                    message: "UNIT TEST IS FAILED"
+                }
             }
         }
-		
-        stage ('CODE ANALYSIS WITH CHECKSTYLE'){
-            steps {
+        stage('Checkstyle Analysis'){
+            steps{
                 sh 'mvn checkstyle:checkstyle'
+            }
+        }
+        stage('Intergrated Testing'){
+            steps{
+                sh 'mvn verify -DiskipUnitTest'
             }
             post {
                 success {
-                    echo 'Generated Analysis Result'
+                    slackSend channel: '#ci-work',
+                    color: 'good',
+                    message: "INTEGRATED TESTING IS SUCCESS"
+                }
+                failure {
+                    slackSend channel: '#ci-work',
+                    color: 'danger',
+                    message: "INTEGRATED TESTING IS FAILED"
                 }
             }
         }
-
-        stage('CODE ANALYSIS with SONARQUBE') {
-          
-		  environment {
-             scannerHome = tool 'sonarscanner4'
-          }
-
-          steps {
-            withSonarQubeEnv('sonar-pro') {
-               sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
-                   -Dsonar.projectName=vprofile-repo \
-                   -Dsonar.projectVersion=1.0 \
-                   -Dsonar.sources=src/ \
-                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
-                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
-            }
-
-            timeout(time: 10, unit: 'MINUTES') {
-               waitForQualityGate abortPipeline: true
-            }
-          }
-        }
-
-        stage("Publish to Nexus Repository Manager") {
-            steps {
-                script {
-                    pom = readMavenPom file: "pom.xml";
-                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
-                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
-                    artifactPath = filesByGlob[0].path;
-                    artifactExists = fileExists artifactPath;
-                    if(artifactExists) {
-                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version} ARTVERSION";
-                        nexusArtifactUploader(
-                            nexusVersion: NEXUS_VERSION,
-                            protocol: NEXUS_PROTOCOL,
-                            nexusUrl: NEXUS_URL,
-                            groupId: pom.groupId,
-                            version: ARTVERSION,
-                            repository: NEXUS_REPOSITORY,
-                            credentialsId: NEXUS_CREDENTIAL_ID,
-                            artifacts: [
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: artifactPath,
-                                type: pom.packaging],
-                                [artifactId: pom.artifactId,
-                                classifier: '',
-                                file: "pom.xml",
-                                type: "pom"]
-                            ]
-                        );
-                    } 
-		    else {
-                        error "*** File: ${artifactPath}, could not be found";
-                    }
+        stage('Sonarqube Analysis'){
+            steps{
+                withSonarQubeEnv(installationName: 'SonarQube', credentialsId: 'jenkins-sonar') {
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
-
-
+        stage('Quality Gate Status'){
+            steps{
+                waitForQualityGate abortPipeline: true, credentialsId: 'jenkins-sonar'
+            }
+        }
+        stage('Upload War into Nexus'){
+            steps{
+                nexusArtifactUploader artifacts: 
+                [
+                    [
+                        artifactId: 'spring-web', 
+                        classifier: '', 
+                        file: 'target/vprofile-v2.war', 
+                        type: 'war'
+                        ]
+                    ], 
+                    credentialsId: 'nexus-jenkis', 
+                    groupId: 'production', 
+                    nexusUrl: '54.172.243.16:8081', 
+                    nexusVersion: 'nexus3', 
+                    protocol: 'http', 
+                    repository: 'vpro-maven', 
+                    version: 'v2'
+            }
+        }
     }
-
-
+    post {
+        always{
+            echo 'slack notifications'
+            slackSend channel: '#ci-work',
+            color: COLOR_MAP[currentBuild.currentResult],
+            message: "*${currentBuild.currentResult}:* Job name ${env.JOB_NAME} build ${env.BUILD_NUMBER} time ${env.BUILD_TIMESTAMP} \n More info at: ${BUILD_URL}"
+        }
+    }
 }

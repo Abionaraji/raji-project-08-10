@@ -12,7 +12,7 @@ pipeline{
     stages{
         stage('Git Checkout'){
             steps{
-                git branch: 'master', url: 'https://github.com/Abionaraji/project-0805.git'
+                git branch: 'ci-jenkins', url: 'https://github.com/Abionaraji/project-one.git'
             }
         }
         stage('Build Maven'){

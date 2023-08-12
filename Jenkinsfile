@@ -86,7 +86,7 @@ EOT'''
                     ], 
                     credentialsId: 'nexus-jenkins', 
                     groupId: 'com.visualpathit', 
-                    nexusUrl: '3.92.0.183:8081', 
+                    nexusUrl: '18.206.228.45', 
                     nexusVersion: 'nexus3', 
                     protocol: 'http', 
                     repository: 'vpro-maven', 

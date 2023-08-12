@@ -73,7 +73,7 @@ EOT'''
                 waitForQualityGate abortPipeline: false, credentialsId: 'sonar-jenkins'
             }
         }
-        ('War Upload'){
+        stage('War Upload'){
             steps{
                 nexusArtifactUploader artifacts: 
                 [

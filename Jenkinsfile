@@ -93,5 +93,18 @@ EOT'''
                     version: 'v2'
             }
         }
+        stage('Uploads Tomcat'){
+            steps{
+                sshagent(['tomcat-credential']) {
+                    sh """
+                    scp -o StrictHostKeyChecking=no target/vprofile-v2.war ubuntu@54.235.226.87:opt/tomcat-9/webapps
+                    ssh -o StrictHostKeyChecking=no ubuntu@54.235.226.87 /opt/tomcat-9/bin/shutdown.sh
+                    ssh -o StrictHostKeyChecking=no ubuntu@54.235.226.87 /opt/tomcat-9/bin/startup.sh
+                    
+                    """
+                }
+
+            }
+        }
     }
 }

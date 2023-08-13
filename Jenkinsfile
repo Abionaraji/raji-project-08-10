@@ -97,9 +97,9 @@ EOT'''
             steps{
                 sshagent(['tomcat-credential']) {
                     sh """
-                    scp -o StrictHostKeyChecking=no target/vprofile-v2.war ubuntu@172-31-92-119:opt/tomcat-9/webapps
-                    ssh -o StrictHostKeyChecking=no ubuntu@172-31-92-119 /opt/tomcat-9/bin/shutdown.sh
-                    ssh -o StrictHostKeyChecking=no ubuntu@172-31-92-119 /opt/tomcat-9/bin/startup.sh
+                    scp -o StrictHostKeyChecking=no target/vprofile-v2.war ubuntu@54.163.138.203:opt/tomcat-9/webapps
+                    ssh -o StrictHostKeyChecking=no ubuntu@54.163.138.203 /opt/tomcat-9/bin/shutdown.sh
+                    ssh -o StrictHostKeyChecking=no ubuntu@54.163.138.203 /opt/tomcat-9/bin/startup.sh
                     
                     """
                 }

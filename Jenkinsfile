@@ -60,11 +60,11 @@ pipeline{
                         ]
                     ], 
                     credentialsId: 'nexus-jenkins', 
-                    groupId: 'com.visualpathit', 
+                    groupId: 'com.visualpathit',
                     nexusUrl: '18.212.37.145:8081', 
                     nexusVersion: 'nexus3', 
                     protocol: 'http', 
-                    repository: 'vpro-maven', 
+                    repository: 'vpro-job', 
                     version: 'v2'
             }
         }

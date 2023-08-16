@@ -14,12 +14,6 @@ pipeline{
             steps{
                 sh 'mvn clean install'
             }
-            post {
-                success{
-                    echo 'New achiving'
-                    archiveArtifacts artifacts: '**/*.war'
-                }
-            }
         }
         stage('Unit Test'){
             steps{

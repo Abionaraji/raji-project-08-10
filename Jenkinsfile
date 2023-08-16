@@ -30,6 +30,18 @@ pipeline{
             steps{
                 sh 'mvn test'
             }
+            post {
+                success {
+                    slackSend channel: '#ci-work',
+                    color: 'good',
+                    message: "UNIT TEST IS SUCCESS"
+                }
+                failure {
+                    slackSend channel: '#ci-work',
+                    color: 'danger',
+                    message: "UNIT TEST IS FAILED"
+                }
+            }
         }
         stage('Checkstyle Analysis'){
             steps{

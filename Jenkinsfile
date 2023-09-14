@@ -85,6 +85,26 @@ pipeline{
                     version: 'v2'
             }
         }
+        stage('Docker image Build'){
+            steps{
+                script{
+                    sh 'docker image build -t $JOB_NAME:v1.$BUILD_ID .'
+                    sh 'docker image tag $JOB_NAME:v1.$BUILD_ID abionaraji/$JOB_NAME:v1.$BUILD_ID'
+                    sh 'docker image tag $JOB_NAME:v1.$BUILD_ID abionaraji/$JOB_NAME:latest'
+                }
+            }
+        }
+        stage('Push Image To Docker'){
+            steps{
+                script{
+                    withCredentials([string(credentialsId: 'dockerhub', variable: 'docker')]) {
+                    sh 'docker login -u abionaraji -p ${docker}'
+                    sh 'docker image push abionaraji/$JOB_NAME:v1.$BUILD_ID'
+                    sh 'docker image push abionaraji/$JOB_NAME:latest'
+                    }
+                }
+            }
+        }
     }
     post {
         always{

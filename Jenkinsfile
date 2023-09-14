@@ -12,7 +12,7 @@ pipeline{
     stages{
         stage('Git Checkout'){
             steps{
-                git branch: 'ci-jenkins', url: 'https://github.com/Abionaraji/raji-project-08-10.git'
+                git branch: 'vp-rem', url: 'https://github.com/Abionaraji/raji-project-08-10.git'
             }
         }
         stage('Maven Build'){
@@ -78,7 +78,7 @@ pipeline{
                     ], 
                     credentialsId: 'nexus-jenkins', 
                     groupId: 'com.visualpathit',
-                    nexusUrl: '18.204.6.88:8081', 
+                    nexusUrl: '100.25.4.92:8081', 
                     nexusVersion: 'nexus3', 
                     protocol: 'http', 
                     repository: 'vpro-maven', 

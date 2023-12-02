@@ -9,6 +9,9 @@ pipeline{
         maven 'Maven'
         jdk 'JDK'
     }
+    environment{
+        SCANNNER_HOME=tool 'sonar-scanner'
+    }
     stages{
         stage('Git Checkout'){
             steps{
@@ -56,7 +59,8 @@ pipeline{
         stage('Sonar Scanner'){
             steps{
                 withSonarQubeEnv(credentialsId: 'sonar-jenkins', installationName: 'SonarQube') {
-                    sh 'mvn sonar:sonar'
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=new \
+                    -Dsonar.projectkey=new -Dsonar.java.binaries=. '''
                 }
             }
         }
